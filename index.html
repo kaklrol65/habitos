@@ -1,0 +1,60 @@
+<!doctype html><html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7"><link rel="manifest" href="manifest.webmanifest"><title>Hábitos</title>
+<style>
+:root{--bg:#f5f5f7;--card:#fff;--text:#1d1d1f;--muted:#6e6e73;--line:#d2d2d7;--blue:#007aff;--green:#34c759}
+.dark{--bg:#000;--card:#1c1c1e;--text:#f5f5f7;--muted:#98989d;--line:#38383a;--blue:#0a84ff;--green:#30d158}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.app{max-width:760px;margin:auto;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 30px)}
+.screen{display:none;min-height:calc(100vh - 50px)}.screen.active{display:block;animation:slide .38s cubic-bezier(.22,.8,.2,1)}@keyframes slide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}h1{font-size:35px;letter-spacing:-1.3px;margin:0}.sub{font-size:15px;color:var(--muted);margin-top:4px}
+.icon,.next,.back{width:44px;height:44px;border:0;border-radius:50%;background:var(--card);color:var(--text);font-size:20px;box-shadow:0 2px 14px #00000012;cursor:pointer}
+.card{background:var(--card);border-radius:22px;padding:18px;box-shadow:0 3px 18px #0000000b}.hero{text-align:center;padding:28px 20px;margin-top:18px}.hero h2{font-size:26px;margin:0 0 8px}.hero p{color:var(--muted);margin:0}.preview{margin-top:22px;text-align:left}.preview div{padding:14px 0;border-bottom:1px solid var(--line);font-weight:600}.preview div:last-child{border:0}.swipe{display:flex;justify-content:center;align-items:center;gap:12px;color:var(--muted);margin-top:24px}.next{color:var(--blue)}
+.dayrow{display:flex;gap:7px;overflow:auto;padding-bottom:5px}.dayrow button{min-width:42px;height:54px;border:0;border-radius:15px;background:var(--bg);color:var(--muted)}.dayrow button strong{display:block;color:var(--text);font-size:15px;margin-top:3px}.dayrow button.active{background:var(--blue);color:white}.dayrow button.active strong{color:white}
+.row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}.row:last-child{border:0}.name{flex:1;font-weight:600}.check{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:transparent;color:transparent;font-size:17px}.check.on{background:var(--green);border-color:var(--green);color:white}.streak{margin-top:18px;text-align:center}.fire{font-size:34px}.streak b{font-size:30px;display:block}.muted{color:var(--muted);font-size:13px}
+.add{display:flex;gap:8px;margin-top:14px}.add input{min-width:0;flex:1;border:0;outline:0;background:var(--bg);color:var(--text);border-radius:14px;padding:13px;font-size:16px}.add button{border:0;border-radius:14px;background:var(--blue);color:white;padding:0 15px;font-weight:700}
+.progress{text-align:center}.ring{width:190px;height:190px;border-radius:50%;display:grid;place-items:center;margin:18px auto;background:conic-gradient(var(--blue) var(--p),var(--line) 0)}.ring:before{content:"";width:142px;height:142px;border-radius:50%;background:var(--card);grid-area:1/1}.ring span{grid-area:1/1;z-index:1;font-size:34px;font-weight:750}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:15px}.stat{background:var(--bg);border-radius:16px;padding:14px}.stat b{display:block;font-size:21px;margin-top:3px}.calendar{margin-top:16px}.calhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.calgrid span{height:36px;display:grid;place-items:center;border-radius:10px;font-size:12px}.dow{color:var(--muted);font-weight:700}.calday{background:var(--bg)}.calday.done{background:var(--green);color:white;font-weight:700}.calday.today{outline:2px solid var(--blue);outline-offset:-2px}.foot{text-align:center;color:var(--muted);font-size:11px;margin-top:22px}
+@media(prefers-reduced-motion:reduce){.screen.active{animation:none}}
+</style></head><body><main class="app">
+
+<section class="screen active" id="s1">
+<div class="top"><div><h1 id="hello">Buenos días.</h1><div class="sub">Estos son tus hábitos de hoy.</div></div><button class="icon" id="theme">☀︎</button></div>
+<div class="card hero"><h2>Tu día empieza aquí.</h2><p id="previewText">Un pequeño paso cada día.</p><div class="preview" id="preview"></div></div>
+<div class="swipe">Desliza para continuar <button class="next" id="go2">→</button></div>
+</section>
+
+<section class="screen" id="s2">
+<div class="top"><div><h1>Hábitos</h1><div class="sub">Marca lo que completes hoy.</div></div><button class="back" id="back1">←</button></div>
+<div class="card"><div class="dayrow" id="days"></div><div id="habits"></div>
+<div class="streak"><div class="fire">🔥</div><b id="streak">0 días</b><span class="muted">racha actual · mejor: <span id="bestStreak">0</span> días</span></div></div>
+<div class="card" style="margin-top:14px"><b>Agregar hábito</b><div class="add"><input id="new" placeholder="Ej. Leer 15 minutos"><button id="add">Agregar</button></div></div>
+<div class="swipe"><button class="back" id="back2">←</button><button class="next" id="go3">→</button></div>
+</section>
+
+<section class="screen" id="s3">
+<div class="top"><div><h1>Progreso</h1><div class="sub">Tu mes, de un vistazo.</div></div><button class="back" id="back3">←</button></div>
+<div class="card progress"><div class="ring" id="ring" style="--p:0%"><span id="ringText">0%</span></div><b id="monthTitle">Este mes</b><div class="stats"><div class="stat"><span class="muted">Días perfectos</span><b id="perfect">0</b></div><div class="stat"><span class="muted">XP total</span><b id="xp">0</b></div></div></div>
+<div class="card calendar"><div class="calhead"><b id="calTitle">Mes</b><span class="muted">Verde = día perfecto</span></div><div class="calgrid" id="calendar"></div></div>
+<div class="swipe"><button class="back" id="back3b">←</button></div>
+</section>
+<div class="foot">Guardado automático · modo oscuro automático desde las 19:00</div>
+</main>
+<script>
+const KEY='habitos-iphone-final-v1';let S=JSON.parse(localStorage.getItem(KEY)||'{}');S.habits??=['🏋️ Entrenar','😴 Dormir 8h','💧 Tomar agua','📚 Estudiar','🥗 Comer saludable','🧘 Estiramiento'];S.done??={};const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+const D=new Date(),Y=D.getFullYear(),M=D.getMonth(),N=new Date(Y,M+1,0).getDate();let selected=D.getDate();
+const key=(i,n)=>Y+'-'+M+'-'+n+'-'+i,pct=n=>S.habits.length?S.habits.filter((_,i)=>S.done[key(i,n)]).length/S.habits.length:0;
+function go(n){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById('s'+n).classList.add('active');render()}
+function render(){let h=new Date().getHours();document.documentElement.classList.toggle('dark',S.theme==='dark'||(S.theme!=='light'&&(h>=19||h<7)));document.getElementById('hello').textContent=(h<12?'Buenos días.':h<19?'Buenas tardes.':'Buenas noches.');
+let p=document.getElementById('preview');p.innerHTML='';S.habits.slice(0,5).forEach(x=>{let d=document.createElement('div');d.textContent=x;p.appendChild(d)});
+let days=document.getElementById('days');days.innerHTML='';for(let n=1;n<=N;n++){let b=document.createElement('button');b.innerHTML=new Date(Y,M,n).toLocaleDateString('es-MX',{weekday:'short'}).slice(0,2)+'<strong>'+n+'</strong>';if(n===selected)b.className='active';b.onclick=()=>{selected=n;render()};days.appendChild(b)}
+let list=document.getElementById('habits');list.innerHTML='';S.habits.forEach((x,i)=>{let r=document.createElement('div');r.className='row';r.innerHTML='<span class="name">'+x+'</span><button class="check '+(S.done[key(i,selected)]?'on':'')+'">✓</button>';r.querySelector('button').onclick=()=>{S.done[key(i,selected)]=!S.done[key(i,selected)];save();render()};list.appendChild(r)});
+let cur=0,best=0,t=0,perfect=0,total=0;for(let n=1;n<=N;n++){let q=pct(n);total+=q;if(q===1)perfect++;if(q===1){t++;best=Math.max(best,t)}else t=0;if(n===selected){cur=0;for(let j=n;j>=1&&pct(j)===1;j--)cur++}}
+document.getElementById('streak').textContent=cur+' días';document.getElementById('bestStreak').textContent=best;document.getElementById('perfect').textContent=perfect;document.getElementById('xp').textContent=Math.round(total*S.habits.length*10);
+let avg=Math.round(total/N*100);document.getElementById('ring').style.setProperty('--p',avg+'%');document.getElementById('ringText').textContent=avg+'%';
+document.getElementById('monthTitle').textContent=new Date(Y,M,1).toLocaleString('es-MX',{month:'long',year:'numeric'});document.getElementById('calTitle').textContent=new Date(Y,M,1).toLocaleString('es-MX',{month:'long',year:'numeric'});
+let cal=document.getElementById('calendar');cal.innerHTML='';['L','M','X','J','V','S','D'].forEach(x=>{let s=document.createElement('span');s.className='dow';s.textContent=x;cal.appendChild(s)});let first=(new Date(Y,M,1).getDay()+6)%7;for(let i=0;i<first;i++)cal.appendChild(document.createElement('span'));for(let n=1;n<=N;n++){let s=document.createElement('span');s.className='calday';if(pct(n)===1)s.classList.add('done');if(n===D.getDate())s.classList.add('today');s.textContent=n;cal.appendChild(s)}}
+document.getElementById('go2').onclick=()=>go(2);document.getElementById('back1').onclick=()=>go(1);document.getElementById('back2').onclick=()=>go(1);document.getElementById('go3').onclick=()=>go(3);document.getElementById('back3').onclick=()=>go(2);document.getElementById('back3b').onclick=()=>go(2);
+document.getElementById('theme').onclick=()=>{S.theme=S.theme==='dark'?'light':'dark';save();render()};document.getElementById('add').onclick=()=>{let v=document.getElementById('new').value.trim();if(v){S.habits.push(v);document.getElementById('new').value='';save();render()}};document.getElementById('new').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('add').click()});
+let touchX=0;document.addEventListener('touchstart',e=>touchX=e.changedTouches[0].screenX,{passive:true});document.addEventListener('touchend',e=>{let dx=e.changedTouches[0].screenX-touchX;if(Math.abs(dx)>70){let a=[...document.querySelectorAll('.screen')].findIndex(x=>x.classList.contains('active'))+1;if(dx<0&&a<3)go(a+1);if(dx>0&&a>1)go(a-1)}},{passive:true});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');render();
+</script></body></html>
