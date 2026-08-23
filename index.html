@@ -4,7 +4,7 @@
 <style>
 :root{--bg:#f5f5f7;--card:#fff;--text:#1d1d1f;--muted:#6e6e73;--line:#d2d2d7;--blue:#007aff;--green:#34c759}
 .dark{--bg:#000;--card:#1c1c1e;--text:#f5f5f7;--muted:#98989d;--line:#38383a;--blue:#0a84ff;--green:#30d158}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+*{box-sizing:border-box}body{margin:0;overscroll-behavior-x:none;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 .app{max-width:760px;margin:auto;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 30px)}
 .screen{display:none;min-height:calc(100vh - 50px)}.screen.active{display:block;animation:slide .38s cubic-bezier(.22,.8,.2,1)}@keyframes slide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}h1{font-size:35px;letter-spacing:-1.3px;margin:0}.sub{font-size:15px;color:var(--muted);margin-top:4px}
@@ -61,6 +61,18 @@ document.getElementById('monthTitle').textContent=new Date(Y,M,1).toLocaleString
 let cal=document.getElementById('calendar');cal.innerHTML='';['L','M','X','J','V','S','D'].forEach(x=>{let s=document.createElement('span');s.className='dow';s.textContent=x;cal.appendChild(s)});let first=(new Date(Y,M,1).getDay()+6)%7;for(let i=0;i<first;i++)cal.appendChild(document.createElement('span'));for(let n=1;n<=N;n++){let s=document.createElement('span');s.className='calday';if(pct(n)===1)s.classList.add('done');if(n===D.getDate())s.classList.add('today');s.textContent=n;cal.appendChild(s)}}
 document.getElementById('go2').onclick=()=>go(2);document.getElementById('back1').onclick=()=>go(1);document.getElementById('back2').onclick=()=>go(1);document.getElementById('go3').onclick=()=>go(3);document.getElementById('back3').onclick=()=>go(2);document.getElementById('back3b').onclick=()=>go(2);
 document.getElementById('theme').onclick=()=>{S.theme=S.theme==='dark'?'light':'dark';save();render()};document.getElementById('add').onclick=()=>{let v=document.getElementById('new').value.trim();if(v){S.habits.push(v);document.getElementById('new').value='';save();render()}};document.getElementById('new').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('add').click()});
-let touchX=0;document.addEventListener('touchstart',e=>touchX=e.changedTouches[0].screenX,{passive:true});document.addEventListener('touchend',e=>{let dx=e.changedTouches[0].screenX-touchX;if(Math.abs(dx)>70){let a=[...document.querySelectorAll('.screen')].findIndex(x=>x.classList.contains('active'))+1;if(dx<0&&a<3)go(a+1);if(dx>0&&a>1)go(a-1)}},{passive:true});
+let touchX=0,touchY=0,touchTarget=null;
+document.addEventListener('touchstart',e=>{
+  const t=e.changedTouches[0]; touchX=t.screenX; touchY=t.screenY; touchTarget=e.target;
+},{passive:true});
+document.addEventListener('touchend',e=>{
+  const t=e.changedTouches[0],dx=t.screenX-touchX,dy=t.screenY-touchY;
+  const blocked=touchTarget && touchTarget.closest('input,button,.dayrow,.calendar,#habits,.calgrid');
+  if(blocked) return;
+  if(Math.abs(dx)>90 && Math.abs(dx)>Math.abs(dy)*1.35){
+    let a=[...document.querySelectorAll('.screen')].findIndex(x=>x.classList.contains('active'))+1;
+    if(dx<0&&a<3)go(a+1); if(dx>0&&a>1)go(a-1);
+  }
+},{passive:true});
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');render();
 </script></body></html>
