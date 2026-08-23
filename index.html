@@ -19,13 +19,13 @@
 
 <section class="screen active" id="s1">
 <div class="top"><div><h1 id="hello">Buenos días.</h1><div class="sub">Estos son tus hábitos de hoy.</div></div><button class="icon" id="theme">☀︎</button></div>
-<div class="card hero"><h2>Tu día empieza aquí.</h2><p id="previewText">Un pequeño paso cada día.</p><div class="preview" id="preview"></div></div>
+<div class="card hero"><h2>Tu día empieza aquí.</h2><p id="previewText">Un pequeño paso cada día.</p><div style="margin:22px 0 8px;text-align:left"><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700"><span>Progreso de hoy</span><span id="dayPct">0%</span></div><div class="progress"><i id="dayBar" style="width:0%"></i></div><div id="dynamicMsg" class="muted" style="margin-top:10px;text-align:left"></div></div><div class="preview" id="preview"></div></div>
 <div class="swipe">Desliza para continuar <button class="next" id="go2">→</button></div>
 </section>
 
 <section class="screen" id="s2">
 <div class="top"><div><h1>Hábitos</h1><div class="sub">Marca lo que completes hoy.</div></div><button class="back" id="back1">←</button></div>
-<div class="card"><div class="dayrow" id="days"></div><div id="habits"></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b>Hoy</b><span class="muted" id="countToday">0/0</span></div><div class="dayrow" id="days"></div><div id="habits"></div>
 <div class="streak"><div class="fire">🔥</div><b id="streak">0 días</b><span class="muted">racha actual · mejor: <span id="bestStreak">0</span> días</span></div></div>
 <div class="card" style="margin-top:14px"><b>Agregar hábito</b><div class="add"><input id="new" placeholder="Ej. Leer 15 minutos"><button id="add">Agregar</button></div></div>
 <div class="swipe"><button class="back" id="back2">←</button><button class="next" id="go3">→</button></div>
@@ -33,7 +33,7 @@
 
 <section class="screen" id="s3">
 <div class="top"><div><h1>Progreso</h1><div class="sub">Tu mes, de un vistazo.</div></div><button class="back" id="back3">←</button></div>
-<div class="card progress"><div class="ring" id="ring" style="--p:0%"><span id="ringText">0%</span></div><b id="monthTitle">Este mes</b><div class="stats"><div class="stat"><span class="muted">Días perfectos</span><b id="perfect">0</b></div><div class="stat"><span class="muted">XP total</span><b id="xp">0</b></div></div></div>
+<div class="card progress"><div class="ring" id="ring" style="--p:0%"><span id="ringText">0%</span></div><b id="monthTitle">Este mes</b><div class="stats"><div class="stat"><span class="muted">Días perfectos</span><b id="perfect">0</b></div><div class="stat"><span class="muted">XP total</span><b id="xp">0</b></div><div class="stat"><span class="muted">Promedio</span><b id="monthAvg">0%</b></div><div class="stat"><span class="muted">Hábitos</span><b id="habitTotal">0</b></div></div></div>
 <div class="card calendar"><div class="calhead"><b id="calTitle">Mes</b><span class="muted">Verde = día perfecto</span></div><div class="calgrid" id="calendar"></div></div>
 <div class="swipe"><button class="back" id="back3b">←</button></div>
 </section>
@@ -45,12 +45,18 @@ const D=new Date(),Y=D.getFullYear(),M=D.getMonth(),N=new Date(Y,M+1,0).getDate(
 const key=(i,n)=>Y+'-'+M+'-'+n+'-'+i,pct=n=>S.habits.length?S.habits.filter((_,i)=>S.done[key(i,n)]).length/S.habits.length:0;
 function go(n){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById('s'+n).classList.add('active');render()}
 function render(){let h=new Date().getHours();document.documentElement.classList.toggle('dark',S.theme==='dark'||(S.theme!=='light'&&(h>=19||h<7)));document.getElementById('hello').textContent=(h<12?'Buenos días.':h<19?'Buenas tardes.':'Buenas noches.');
+let todayPct=Math.round(pct(selected)*100);
+document.getElementById('dayPct').textContent=todayPct+'%';
+document.getElementById('dayBar').style.width=todayPct+'%';
+let msg=todayPct===100?'Día perfecto 🏆':todayPct>=80?'Vas excelente 🔥':todayPct>=50?'Ya pasaste la mitad. Sigue así 💪':todayPct>0?'Un hábito más y avanzas mucho ✨':'Todo empieza con el primer hábito.';
+document.getElementById('dynamicMsg').textContent=msg;
+document.getElementById('countToday').textContent=Math.round(pct(selected)*S.habits.length)+'/'+S.habits.length;
 let p=document.getElementById('preview');p.innerHTML='';S.habits.slice(0,5).forEach(x=>{let d=document.createElement('div');d.textContent=x;p.appendChild(d)});
 let days=document.getElementById('days');days.innerHTML='';for(let n=1;n<=N;n++){let b=document.createElement('button');b.innerHTML=new Date(Y,M,n).toLocaleDateString('es-MX',{weekday:'short'}).slice(0,2)+'<strong>'+n+'</strong>';if(n===selected)b.className='active';b.onclick=()=>{selected=n;render()};days.appendChild(b)}
-let list=document.getElementById('habits');list.innerHTML='';S.habits.forEach((x,i)=>{let r=document.createElement('div');r.className='row';r.innerHTML='<span class="name">'+x+'</span><button class="check '+(S.done[key(i,selected)]?'on':'')+'">✓</button>';r.querySelector('button').onclick=()=>{S.done[key(i,selected)]=!S.done[key(i,selected)];save();render()};list.appendChild(r)});
+let list=document.getElementById('habits');list.innerHTML='';S.habits.forEach((x,i)=>{let r=document.createElement('div');r.className='row';let hs=0;for(let z=selected;z>=1&&S.done[key(i,z)];z--)hs++;r.innerHTML='<span class="name">'+x+'<small style="display:block;color:var(--muted);font-weight:400;margin-top:3px">🔥 '+hs+' días de racha</small></span><button class="check '+(S.done[key(i,selected)]?'on':'')+'">✓</button>';r.querySelector('button').onclick=()=>{S.done[key(i,selected)]=!S.done[key(i,selected)];save();render()};list.appendChild(r)});
 let cur=0,best=0,t=0,perfect=0,total=0;for(let n=1;n<=N;n++){let q=pct(n);total+=q;if(q===1)perfect++;if(q===1){t++;best=Math.max(best,t)}else t=0;if(n===selected){cur=0;for(let j=n;j>=1&&pct(j)===1;j--)cur++}}
 document.getElementById('streak').textContent=cur+' días';document.getElementById('bestStreak').textContent=best;document.getElementById('perfect').textContent=perfect;document.getElementById('xp').textContent=Math.round(total*S.habits.length*10);
-let avg=Math.round(total/N*100);document.getElementById('ring').style.setProperty('--p',avg+'%');document.getElementById('ringText').textContent=avg+'%';
+let avg=Math.round(total/N*100);document.getElementById('monthAvg').textContent=avg+'%';document.getElementById('habitTotal').textContent=S.habits.length;document.getElementById('ring').style.setProperty('--p',avg+'%');document.getElementById('ringText').textContent=avg+'%';
 document.getElementById('monthTitle').textContent=new Date(Y,M,1).toLocaleString('es-MX',{month:'long',year:'numeric'});document.getElementById('calTitle').textContent=new Date(Y,M,1).toLocaleString('es-MX',{month:'long',year:'numeric'});
 let cal=document.getElementById('calendar');cal.innerHTML='';['L','M','X','J','V','S','D'].forEach(x=>{let s=document.createElement('span');s.className='dow';s.textContent=x;cal.appendChild(s)});let first=(new Date(Y,M,1).getDay()+6)%7;for(let i=0;i<first;i++)cal.appendChild(document.createElement('span'));for(let n=1;n<=N;n++){let s=document.createElement('span');s.className='calday';if(pct(n)===1)s.classList.add('done');if(n===D.getDate())s.classList.add('today');s.textContent=n;cal.appendChild(s)}}
 document.getElementById('go2').onclick=()=>go(2);document.getElementById('back1').onclick=()=>go(1);document.getElementById('back2').onclick=()=>go(1);document.getElementById('go3').onclick=()=>go(3);document.getElementById('back3').onclick=()=>go(2);document.getElementById('back3b').onclick=()=>go(2);
