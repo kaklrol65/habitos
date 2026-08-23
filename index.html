@@ -37,10 +37,25 @@
 <div class="card calendar"><div class="calhead"><b id="calTitle">Mes</b><span class="muted">Verde = día perfecto</span></div><div class="calgrid" id="calendar"></div></div>
 <div class="swipe"><button class="back" id="back3b">←</button></div>
 </section>
-<div class="foot">Guardado automático · modo oscuro automático desde las 19:00</div>
+<div class="foot">Guardado automático en este dispositivo · modo oscuro automático desde las 19:00</div>
 </main>
 <script>
-const KEY='habitos-iphone-final-v1';let S=JSON.parse(localStorage.getItem(KEY)||'{}');S.habits??=['🏋️ Entrenar','😴 Dormir 8h','💧 Tomar agua','📚 Estudiar','🥗 Comer saludable','🧘 Estiramiento'];S.done??={};const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+const KEY='habitos-iphone-data-v1';
+let S;
+try { S=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; } catch(e) { S={}; }
+if(!S.habits || !Array.isArray(S.habits)){
+  try{
+    const legacy=JSON.parse(localStorage.getItem('habitos-iphone-final-v1')||'null');
+    S=legacy && Array.isArray(legacy.habits) ? legacy : S;
+  }catch(e){}
+}
+S.habits=Array.isArray(S.habits)?S.habits:[];
+S.done=(S.done&&typeof S.done==='object')?S.done:{};
+S.theme=(S.theme==='dark'||S.theme==='light')?S.theme:null;S.habits??=['🏋️ Entrenar','😴 Dormir 8h','💧 Tomar agua','📚 Estudiar','🥗 Comer saludable','🧘 Estiramiento'];S.done??={};const save=()=>{
+  const data=JSON.stringify(S);
+  localStorage.setItem(KEY,data);
+  localStorage.setItem('habitos-iphone-backup-v1',data);
+};
 const D=new Date(),Y=D.getFullYear(),M=D.getMonth(),N=new Date(Y,M+1,0).getDate();let selected=D.getDate();
 const key=(i,n)=>Y+'-'+M+'-'+n+'-'+i,pct=n=>S.habits.length?S.habits.filter((_,i)=>S.done[key(i,n)]).length/S.habits.length:0;
 function go(n){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById('s'+n).classList.add('active');render()}
