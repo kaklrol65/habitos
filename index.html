@@ -25,6 +25,10 @@
 .reminder .rtext{flex:1}.tag{font-size:12px;color:var(--muted)}
 .dayselected{box-shadow:inset 0 0 0 2px var(--blue)}
 .calendar .calday{cursor:pointer}
+
+.habit-edit-row{touch-action:pan-y;user-select:none}.drag-handle{cursor:grab;color:var(--muted);font-size:18px}.dragging{opacity:.55}
+@media (pointer:coarse){.desktop-order{display:none!important}.drag-handle{padding:6px 8px}}
+@media (pointer:fine){.drag-handle{display:none}}
 </style></head><body><main class="app">
 
 <section class="screen active" id="s1">
@@ -35,11 +39,13 @@
 
 <section class="screen" id="s2">
 <div class="top"><div><h1>Hábitos</h1><div class="sub">Marca lo que completes hoy.</div></div><button class="back" id="back1">←</button></div>
-<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b>Hoy</b><span class="muted" id="countToday">0/0</span></div><div class="dayrow" id="days"></div><div id="habits"></div>
+<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+<div><b id="selectedDayTitle">Hoy</b><div class="muted" id="selectedDayDate"></div></div>
+<div style="display:flex;gap:6px;align-items:center"><button class="mini blue" id="todayBtn" style="display:none">Hoy</button><span class="muted" id="countToday">0/0</span></div></div><div class="dayrow" id="days"></div><div id="habits"></div>
 <div class="streak"><div class="fire">🔥</div><b id="streak">0 días</b><span class="muted">racha actual · mejor: <span id="bestStreak">0</span> días</span></div></div>
 <div class="card" style="margin-top:14px"><b>Gestionar hábitos</b>
 <div class="add"><input id="new" placeholder="Ej. Leer 15 minutos"><button id="add">Agregar</button></div>
-<div class="muted" style="margin-top:8px">Después de agregarlo puedes elegir qué días aparece.</div>
+<div class="muted" style="margin-top:8px">En iPhone puedes mantener presionado ☰ y arrastrar para ordenar. En PC también puedes usar las flechas.</div>
 <div id="habitEditor" class="editor" style="display:none"></div></div>
 <div class="card" style="margin-top:14px"><b>Recordatorios</b><div class="muted" style="margin-top:5px">Tareas que aparecen solo en los días que elijas.</div>
 <div class="add"><input id="newReminder" placeholder="Ej. Lavar la ropa"><button id="addReminder">Agregar</button></div>
@@ -82,7 +88,17 @@ const activeIndexes=(n)=>S.habits.map((h,i)=>({h,i})).filter(o=>o.h.days.include
 const key=(i,n)=>Y+'-'+M+'-'+n+'-'+i;
 const pct=n=>{const ids=activeIndexes(n);return ids.length?ids.filter(i=>S.done[key(i,n)]).length/ids.length:0};
 function go(n){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById('s'+n).classList.add('active');render()}
-function render(){let h=new Date().getHours();document.documentElement.classList.toggle('dark',S.theme==='dark'||(S.theme!=='light'&&(h>=19||h<7)));document.getElementById('hello').textContent=(h<12?'Buenos días.':h<19?'Buenas tardes.':'Buenas noches.');
+function updateSelectedDayUI(){
+ const date=new Date(Y,M,selected);
+ const names=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+ const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+ const isToday=selected===D.getDate();
+ document.getElementById('selectedDayTitle').textContent=isToday?'Hoy':names[date.getDay()];
+ document.getElementById('selectedDayDate').textContent=date.getDate()+' de '+months[date.getMonth()]+' de '+date.getFullYear();
+ document.getElementById('todayBtn').style.display=isToday?'none':'inline-block';
+ document.getElementById('todayBtn').onclick=()=>{selected=D.getDate();render()};
+}
+function render(){updateSelectedDayUI();let h=new Date().getHours();document.documentElement.classList.toggle('dark',S.theme==='dark'||(S.theme!=='light'&&(h>=19||h<7)));document.getElementById('hello').textContent=(h<12?'Buenos días.':h<19?'Buenas tardes.':'Buenas noches.');
 let todayPct=Math.round(pct(selected)*100);
 document.getElementById('dayPct').textContent=todayPct+'%';
 document.getElementById('dayBar').style.width=todayPct+'%';
@@ -100,6 +116,7 @@ S.habits.forEach((h,i)=>{
   r.querySelector('.check').onclick=()=>{S.done[key(i,selected)]=!S.done[key(i,selected)];save();render()};
   list.appendChild(r);
 });
+if(!list.children.length){let e=document.createElement('div');e.className='muted';e.style.padding='14px 0';e.textContent='No hay hábitos programados para este día.';list.appendChild(e)}
 renderHabitManager();
 renderReminders();
 let cur=0,best=0,t=0,perfect=0,total=0;for(let n=1;n<=N;n++){let q=pct(n);total+=q;if(q===1)perfect++;if(q===1){t++;best=Math.max(best,t)}else t=0;if(n===selected){cur=0;for(let j=n;j>=1&&pct(j)===1;j--)cur++}}
@@ -109,20 +126,30 @@ document.getElementById('monthTitle').textContent=new Date(Y,M,1).toLocaleString
 let cal=document.getElementById('calendar');cal.innerHTML='';['L','M','X','J','V','S','D'].forEach(x=>{let s=document.createElement('span');s.className='dow';s.textContent=x;cal.appendChild(s)});let first=(new Date(Y,M,1).getDay()+6)%7;for(let i=0;i<first;i++)cal.appendChild(document.createElement('span'));for(let n=1;n<=N;n++){let s=document.createElement('span');s.className='calday';if(pct(n)===1)s.classList.add('done');if(n===D.getDate())s.classList.add('today');if(n===selected)s.classList.add('dayselected');s.textContent=n;s.title='Ver '+n; s.onclick=()=>{selected=n;go(2)};cal.appendChild(s)}}
 document.getElementById('go2').onclick=()=>go(2);document.getElementById('back1').onclick=()=>go(1);document.getElementById('back2').onclick=()=>go(1);document.getElementById('go3').onclick=()=>go(3);document.getElementById('back3').onclick=()=>go(2);document.getElementById('back3b').onclick=()=>go(2);
 document.getElementById('theme').onclick=()=>{S.theme=S.theme==='dark'?'light':'dark';save();render()};function renderHabitManager(){
- const ed=document.getElementById('habitEditor');
- ed.style.display='block';
- ed.innerHTML='';
+ const ed=document.getElementById('habitEditor'); ed.style.display='block'; ed.innerHTML='';
+ let dragIndex=null;
  S.habits.forEach((h,i)=>{
-   const row=document.createElement('div');row.className='row';row.style.flexWrap='wrap';
-   const safe=h.name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-   row.innerHTML='<span class="name">'+safe+'</span><button class="mini blue editH">✏️</button><button class="mini" title="Subir">↑</button><button class="mini" title="Bajar">↓</button><button class="mini danger">🗑️</button><div class="week" style="width:100%"></div>';
-   const buttons=[...row.querySelector('.week').children];
-   ['D','L','M','X','J','V','S'].forEach((d,di)=>{let b=document.createElement('button');b.textContent=d;let js=(di===0?0:di);if(h.days.includes(js))b.classList.add('on');b.onclick=()=>{if(h.days.includes(js)){if(h.days.length>1)h.days=h.days.filter(x=>x!==js)}else h.days.push(js);save();render()};row.querySelector('.week').appendChild(b)});
+   const row=document.createElement('div'); row.className='row habit-edit-row'; row.draggable=true;
+   row.innerHTML='<span class="drag-handle">☰</span><span class="name">'+h.name.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span><button class="mini blue editH">✏️</button><button class="mini desktop-order" title="Subir">↑</button><button class="mini desktop-order" title="Bajar">↓</button><button class="mini danger">🗑️</button><div class="week" style="width:100%"></div>';
+   const week=row.querySelector('.week');
+   ['D','L','M','X','J','V','S'].forEach((d,di)=>{
+     let b=document.createElement('button');b.textContent=d;
+     if(h.days.includes(di))b.classList.add('on');
+     b.onclick=()=>{if(h.days.includes(di)){if(h.days.length>1)h.days=h.days.filter(x=>x!==di)}else h.days.push(di);save();render()};
+     week.appendChild(b);
+   });
    row.querySelector('.editH').onclick=()=>{let v=prompt('Nombre del hábito',h.name);if(v&&v.trim()){h.name=v.trim();save();render()}};
    const minis=row.querySelectorAll('.mini');
    minis[1].onclick=()=>{if(i>0){[S.habits[i-1],S.habits[i]]=[S.habits[i],S.habits[i-1]];save();render()}};
    minis[2].onclick=()=>{if(i<S.habits.length-1){[S.habits[i+1],S.habits[i]]=[S.habits[i],S.habits[i+1]];save();render()}};
    minis[3].onclick=()=>{if(confirm('¿Eliminar este hábito?')){S.habits.splice(i,1);save();render()}};
+   row.addEventListener('dragstart',()=>{dragIndex=i;row.classList.add('dragging')});
+   row.addEventListener('dragend',()=>row.classList.remove('dragging'));
+   row.addEventListener('dragover',e=>e.preventDefault());
+   row.addEventListener('drop',e=>{e.preventDefault();if(dragIndex===null||dragIndex===i)return;let x=S.habits.splice(dragIndex,1)[0];S.habits.splice(i,0,x);dragIndex=null;save();render()});
+   let holdTimer=null;
+   row.addEventListener('touchstart',()=>{holdTimer=setTimeout(()=>row.setAttribute('draggable','true'),350)},{passive:true});
+   row.addEventListener('touchend',()=>{clearTimeout(holdTimer)},{passive:true});
    ed.appendChild(row);
  });
 }
