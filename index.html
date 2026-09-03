@@ -29,6 +29,38 @@
 .habit-edit-row{touch-action:pan-y;user-select:none}.drag-handle{cursor:grab;color:var(--muted);font-size:18px}.dragging{opacity:.55}
 @media (pointer:coarse){.desktop-order{display:none!important}.drag-handle{padding:6px 8px}}
 @media (pointer:fine){.drag-handle{display:none}}
+
+/* ===== V5 compact management + reminders ===== */
+.habitsHead,.remindersHead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.circleAction{width:34px;height:34px;border:0;border-radius:50%;background:var(--soft);font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.v5menu{display:none;margin-top:12px;padding:9px;border-radius:17px;background:var(--soft);gap:7px;grid-template-columns:1fr 1fr}
+.v5menu.open{display:grid}
+.v5menu button,.reminderListBtn{border:0;border-radius:12px;padding:9px 10px;background:var(--card);font:inherit;cursor:pointer}
+.v5sub{display:none;margin-top:10px}
+.v5sub.open{display:block}
+.v5sub .row{margin-top:8px}
+.v5sub input[type=text],.v5sub input[type=time]{box-sizing:border-box}
+.v5daychips{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.v5daychips button{border:0;border-radius:10px;padding:5px 8px;background:var(--card);font-size:12px;cursor:pointer}
+.v5daychips button.on{background:#111;color:#fff}
+.v5row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.v5row:last-child{border-bottom:0}
+.v5actions{display:flex;gap:5px;align-items:center}
+.v5small{font-size:12px}
+.v5next{margin-top:11px;padding-top:9px;border-top:1px solid var(--line);opacity:.58}
+.v5nextTitle{font-size:12px;font-weight:600;margin-bottom:4px}
+.v5nextItem{font-size:12px;padding:2px 0}
+.v5week{display:none;margin-top:10px;padding:9px 11px;border-radius:16px;background:var(--soft)}
+.v5week.open{display:block}
+.v5weekday{padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.v5weekday:last-child{border-bottom:0}
+.v5weekday strong{display:block;margin-bottom:3px}
+.v5muted{opacity:.55}
+.v5toggle{font-size:12px}
+@media (prefers-color-scheme:dark){
+  .v5daychips button.on{background:#fff;color:#111}
+}
+
 </style></head><body><main class="app">
 
 <section class="screen active" id="s1">
@@ -153,50 +185,224 @@ document.getElementById('theme').onclick=()=>{S.theme=S.theme==='dark'?'light':'
    ed.appendChild(row);
  });
 }
-function renderReminders(){
- const box=document.getElementById('reminders');box.innerHTML='';
- const names=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
- const todays=S.reminders.filter(r=>r.days.includes(dayOf(selected)));
- const list=todays.length?todays:[];
- list.forEach((r)=>{
-   const row=document.createElement('div');row.className='reminder';
-   row.innerHTML='<span class="rtext">🔔 <b>'+r.name+'</b><div class="tag">Hoy</div></span><button class="mini blue">✏️</button><button class="mini danger">🗑️</button>';
-   const idx=S.reminders.indexOf(r);
-   row.querySelector('.blue').onclick=()=>{let v=prompt('Editar recordatorio',r.name);if(v&&v.trim()){r.name=v.trim();save();render()}};
-   row.querySelector('.danger').onclick=()=>{if(confirm('¿Eliminar este recordatorio?')){S.reminders.splice(idx,1);save();render()}};
-   box.appendChild(row);
- });
- const ed=document.getElementById('reminderEditor');ed.style.display='block';ed.innerHTML='';
- S.reminders.forEach((r)=>{
-   const wrap=document.createElement('div');wrap.className='muted';wrap.style.marginTop='8px';
-   wrap.textContent='Días de "'+r.name+'":';
-   const week=document.createElement('div');week.className='week';
-   ['D','L','M','X','J','V','S'].forEach((d,di)=>{let b=document.createElement('button');b.textContent=d;let js=di;if(r.days.includes(js))b.classList.add('on');b.onclick=()=>{if(r.days.includes(js)){if(r.days.length>1)r.days=r.days.filter(x=>x!==js)}else r.days.push(js);save();render()};week.appendChild(b)});
-   wrap.appendChild(week);ed.appendChild(wrap);
- });
+
+function v5NormalizeReminders(){
+  S.reminders = (S.reminders || []).map(r => ({
+    id: r.id || ('r' + Date.now() + Math.random()),
+    name: r.name || 'Recordatorio',
+    days: Array.isArray(r.days) && r.days.length ? r.days : [5],
+    time: r.time || '18:00',
+    enabled: r.enabled !== false
+  }));
 }
-document.getElementById('add').onclick=()=>{
- let v=document.getElementById('new').value.trim();
- if(v){S.habits.push({id:'h'+Date.now(),name:v,days:[0,1,2,3,4,5,6]});document.getElementById('new').value='';save();render()}
-};
-document.getElementById('new').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('add').click()});
-document.getElementById('addReminder').onclick=()=>{
- let v=document.getElementById('newReminder').value.trim();
- if(v){S.reminders.push({id:'r'+Date.now(),name:v,days:[5]});document.getElementById('newReminder').value='';save();render()}
-};
-document.getElementById('newReminder').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('addReminder').click()});
-let touchX=0,touchY=0,touchTarget=null;
-document.addEventListener('touchstart',e=>{
-  const t=e.changedTouches[0]; touchX=t.screenX; touchY=t.screenY; touchTarget=e.target;
-},{passive:true});
-document.addEventListener('touchend',e=>{
-  const t=e.changedTouches[0],dx=t.screenX-touchX,dy=t.screenY-touchY;
-  const blocked=touchTarget && touchTarget.closest('input,button,.dayrow,.calendar,#habits,.calgrid');
-  if(blocked) return;
-  if(Math.abs(dx)>90 && Math.abs(dx)>Math.abs(dy)*1.35){
-    let a=[...document.querySelectorAll('.screen')].findIndex(x=>x.classList.contains('active'))+1;
-    if(dx<0&&a<3)go(a+1); if(dx>0&&a>1)go(a-1);
+function v5ReminderForDay(n){
+  const d = dayOf(n);
+  return (S.reminders || [])
+    .filter(r => r.enabled !== false && r.days.includes(d))
+    .sort((a,b) => String(a.time||'').localeCompare(String(b.time||'')));
+}
+function v5Esc(s){
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function v5EscAttr(s){
+  return v5Esc(s).replace(/"/g,'&quot;');
+}
+function v5DayName(i){
+  return ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][i];
+}
+function v5ShortDay(i){
+  return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][i];
+}
+function renderReminders(){
+  v5NormalizeReminders();
+
+  const today = v5ReminderForDay(selected);
+  const box = document.getElementById('todayReminders');
+  if(box){
+    box.innerHTML = today.length
+      ? today.map(r => `<div class="v5row"><span>${v5Esc(r.name)}</span><span class="v5muted">${v5Esc(r.time)}</span></div>`).join('')
+      : '<div class="v5muted" style="padding-top:8px;font-size:13px">No hay recordatorios para este día.</div>';
   }
-},{passive:true});
-if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');render();
-</script></body></html>
+
+  const nextDate = new Date(Y, M, selected + 1);
+  const nextN = nextDate.getDate();
+  const nextList = v5ReminderForDay(nextN);
+  const nextBox = document.getElementById('nextDayReminders');
+  if(nextBox){
+    nextBox.innerHTML =
+      `<div class="v5nextTitle">Siguiente día · ${v5DayName(dayOf(nextN))}</div>` +
+      (nextList.length
+        ? nextList.map(r => `<div class="v5nextItem">${v5Esc(r.name)} <span class="v5muted">· ${v5Esc(r.time)}</span></div>`).join('')
+        : '<div class="v5nextItem">Sin recordatorios</div>');
+  }
+
+  renderWeekReminders();
+  renderReminderEditor();
+}
+function renderWeekReminders(){
+  const box = document.getElementById('weekReminders');
+  if(!box) return;
+  let out = '';
+  for(let d=1; d<=7; d++){
+    const day = d % 7;
+    const list = (S.reminders || [])
+      .filter(r => r.enabled !== false && r.days.includes(day))
+      .sort((a,b) => String(a.time||'').localeCompare(String(b.time||'')));
+    out += `<div class="v5weekday"><strong>${v5DayName(day)}</strong>` +
+      (list.length
+        ? list.map(r => `${v5Esc(r.name)} <span class="v5muted">· ${v5Esc(r.time)}</span>`).join('<br>')
+        : '<span class="v5muted">Sin recordatorios</span>') +
+      `</div>`;
+  }
+  box.innerHTML = out;
+}
+function v5ReminderDayButtons(r){
+  return [1,2,3,4,5,6,0].map(d =>
+    `<button type="button" data-rday="${r.id}" data-day="${d}" class="${r.days.includes(d)?'on':''}">${v5ShortDay(d)}</button>`
+  ).join('');
+}
+function renderReminderEditor(){
+  const sub = document.getElementById('reminderEditSub');
+  if(!sub || !sub.classList.contains('open')) return;
+  const list = S.reminders || [];
+  sub.innerHTML = list.length ? list.map(r => `
+    <div class="v5row" style="display:block">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:7px">
+        <input type="text" data-rname="${r.id}" value="${v5EscAttr(r.name)}">
+        <input type="time" data-rtime="${r.id}" value="${v5EscAttr(r.time||'18:00')}">
+      </div>
+      <div class="v5daychips">${v5ReminderDayButtons(r)}</div>
+      <div class="v5actions" style="margin-top:7px">
+        <label class="v5muted v5toggle"><input type="checkbox" data-renabled="${r.id}" ${r.enabled!==false?'checked':''}> Activo</label>
+        <button type="button" data-rdelete="${r.id}" style="margin-left:auto">Eliminar</button>
+      </div>
+    </div>`).join('') : '<div class="v5muted">No tienes recordatorios.</div>';
+}
+function openReminderEditor(){
+  const sub = document.getElementById('reminderEditSub');
+  if(!sub) return;
+  sub.classList.toggle('open');
+  renderReminderEditor();
+}
+function addReminder(){
+  const name = prompt('Nombre del recordatorio:');
+  if(!name || !name.trim()) return;
+  let time = prompt('Hora (HH:MM):','18:00') || '18:00';
+  if(!/^\d{2}:\d{2}$/.test(time)) time='18:00';
+  const days = [dayOf(selected)];
+  S.reminders = S.reminders || [];
+  S.reminders.push({id:'r'+Date.now(),name:name.trim(),days,time,enabled:true});
+  save();
+  renderReminders();
+}
+/* ===== V5 event wiring ===== */
+(function(){
+  v5NormalizeReminders();
+  const $ = id => document.getElementById(id);
+
+  function closeHabitSubs(){
+    ['habitAddSub','habitEditSub','habitOrderSub','habitScheduleSub'].forEach(id => $(id)?.classList.remove('open'));
+  }
+
+  $('habitManageToggle')?.addEventListener('click',()=>{
+    const open = $('habitManageMenu').classList.toggle('open');
+    $('habitManageToggle').textContent = open ? '×' : '＋';
+  });
+
+  $('addHabitBtn')?.addEventListener('click',()=>{
+    closeHabitSubs();
+    $('habitAddSub')?.classList.add('open');
+    const days = $('addHabitDays');
+    if(days && !days.dataset.ready){
+      days.innerHTML = [1,2,3,4,5,6,0].map(d =>
+        `<button type="button" data-addday="${d}" class="on">${v5ShortDay(d)}</button>`).join('');
+      days.dataset.ready='1';
+      days.addEventListener('click',e=>{
+        const b=e.target.closest('[data-addday]');
+        if(b)b.classList.toggle('on');
+      });
+    }
+  });
+
+  $('saveHabitBtn')?.addEventListener('click',()=>{
+    const input=$('newHabit');
+    const name=(input?.value||'').trim();
+    if(!name)return;
+    const days=[...( $('addHabitDays')?.querySelectorAll('.on')||[] )].map(b=>Number(b.dataset.addday));
+    const habit={id:'h'+Date.now(),name,days:days.length?days:[1,2,3,4,5,6,0]};
+    S.habits=S.habits||[];
+    S.habits.push(habit);
+    save();
+    input.value='';
+    closeHabitSubs();
+    render();
+  });
+
+  $('editHabitBtn')?.addEventListener('click',()=>{
+    closeHabitSubs();
+    $('habitEditSub')?.classList.add('open');
+    renderHabitManager?.();
+  });
+  $('orderHabitBtn')?.addEventListener('click',()=>{
+    closeHabitSubs();
+    $('habitOrderSub')?.classList.add('open');
+    renderHabitManager?.();
+  });
+  $('scheduleHabitBtn')?.addEventListener('click',()=>{
+    closeHabitSubs();
+    $('habitScheduleSub')?.classList.add('open');
+    renderHabitManager?.();
+  });
+
+  $('reminderManageToggle')?.addEventListener('click',()=>{
+    const open=$('reminderMenu').classList.toggle('open');
+    $('reminderManageToggle').textContent=open?'×':'＋';
+  });
+  $('weekRemindersToggle')?.addEventListener('click',()=>{
+    $('weekReminders')?.classList.toggle('open');
+  });
+  $('addReminderBtn')?.addEventListener('click',addReminder);
+  $('editReminderBtn')?.addEventListener('click',openReminderEditor);
+
+  $('reminderEditSub')?.addEventListener('input',e=>{
+    const id=e.target.dataset.rname || e.target.dataset.rtime;
+    if(!id)return;
+    const r=(S.reminders||[]).find(x=>x.id===id);
+    if(!r)return;
+    if(e.target.dataset.rname!==undefined)r.name=e.target.value;
+    if(e.target.dataset.rtime!==undefined)r.time=e.target.value;
+    save(); renderReminders();
+  });
+  $('reminderEditSub')?.addEventListener('change',e=>{
+    const id=e.target.dataset.renabled;
+    if(!id)return;
+    const r=(S.reminders||[]).find(x=>x.id===id);
+    if(r){r.enabled=e.target.checked;save();renderReminders();renderReminderEditor();}
+  });
+  $('reminderEditSub')?.addEventListener('click',e=>{
+    const del=e.target.dataset.rdelete;
+    if(del){
+      S.reminders=(S.reminders||[]).filter(r=>r.id!==del);
+      save();renderReminders();renderReminderEditor();return;
+    }
+    const rid=e.target.dataset.rday;
+    const day=e.target.dataset.day;
+    if(rid && day!==undefined){
+      const r=(S.reminders||[]).find(x=>x.id===rid);
+      if(!r)return;
+      const d=Number(day);
+      r.days=r.days.includes(d)?r.days.filter(x=>x!==d):r.days.concat(d);
+      if(!r.days.length)r.days=[d];
+      save();renderReminders();renderReminderEditor();
+    }
+  });
+
+  // Ensure the compact controls sit directly with the habits section.
+  const habits=$('habits'), manager=$('managerCard'), reminders=$('remindersCard');
+  if(habits && manager && manager.parentElement!==habits)habits.appendChild(manager);
+  if(habits && reminders && reminders.parentElement!==habits)habits.appendChild(reminders);
+
+  renderReminders();
+})();
+
+
