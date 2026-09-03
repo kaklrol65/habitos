@@ -1,4 +1,4 @@
-const C='habitos-final-v5-fixed';
+const C='habitos-final-v5-final';
 const A=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(A)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(
