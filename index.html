@@ -26,7 +26,7 @@
 .dayselected{box-shadow:inset 0 0 0 2px var(--blue)}
 .calendar .calday{cursor:pointer}
 
-.habit-edit-row{touch-action:pan-y;user-select:none;-webkit-user-select:none}.drag-handle{cursor:grab;color:var(--muted);font-size:20px;line-height:1;padding:8px 10px;min-width:34px;text-align:center;touch-action:none;-webkit-user-select:none;user-select:none}.drag-handle:active{cursor:grabbing}.dragging{opacity:.55;transform:scale(.99)}
+.habit-edit-row{touch-action:pan-y;user-select:none;-webkit-user-select:none;display:flex;align-items:center;gap:8px}.drag-handle{cursor:grab;color:var(--muted);font-size:22px;line-height:1;padding:10px 12px;min-width:40px;text-align:center;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.drag-handle:active{cursor:grabbing}.dragging{opacity:.55;transform:scale(.98)}.habit-edit-row .name{flex:1}
 @media(pointer:coarse){.desktop-order{display:none!important}.drag-handle{padding:10px 9px}}
 @media (pointer:fine){.drag-handle{display:none}}
 
@@ -148,57 +148,30 @@ document.getElementById('theme').onclick=()=>{S.theme=S.theme==='dark'?'light':'
  const mode=window.habitManagerMode||'edit';
  const ed=document.getElementById(mode==='edit'?'habitEditSub':mode==='order'?'habitOrderSub':'habitScheduleSub');
  if(!ed)return;
- ed.innerHTML=''; ed.style.display='block';
+ ed.innerHTML=''; ed.classList.add('open');
  S.habits.forEach((h,i)=>{
-   const row=document.createElement('div');row.className='row habit-edit-row';
+   const row=document.createElement('div'); row.className='row habit-edit-row';
    if(mode==='edit'){
      row.innerHTML='<span class="name">'+h.name.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span><button class="mini blue">✏️</button><button class="mini danger">🗑️</button>';
      row.querySelector('.blue').onclick=()=>{let v=prompt('Nombre del hábito',h.name);if(v&&v.trim()){h.name=v.trim();save();render()}};
      row.querySelector('.danger').onclick=()=>{if(confirm('¿Eliminar este hábito?')){S.habits.splice(i,1);save();render()}};
    }else if(mode==='order'){
-     row.innerHTML='<span class="drag-handle" aria-label="Arrastrar para reordenar" title="Arrastra para reordenar">⋮⋮</span><span class="name">'+h.name.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span>';
-     const handle=row.querySelector('.drag-handle');
-     handle.addEventListener('pointerdown',e=>{
-       if(e.pointerType==='mouse'&&e.button!==0)return;
-       e.preventDefault();
-       handle.setPointerCapture?.(e.pointerId);
-       row.classList.add('dragging');
-       const move=e2=>{
-         e2.preventDefault();
-         const el=document.elementFromPoint(e2.clientX,e2.clientY);
-         const target=el&&el.closest('.habit-edit-row');
-         if(!target||target===row||target.parentElement!==ed)return;
-         const rows=[...ed.querySelectorAll('.habit-edit-row')];
-         const from=rows.indexOf(row),to=rows.indexOf(target);
-         if(from<0||to<0||from===to)return;
-         const rect=target.getBoundingClientRect();
-         if((from<to&&e2.clientY>rect.top+rect.height/2)||(from>to&&e2.clientY<rect.top+rect.height/2)){
-           const item=S.habits.splice(from,1)[0];
-           S.habits.splice(to,0,item);
-           const currentRows=[...ed.querySelectorAll('.habit-edit-row')];
-           if(from<to)ed.insertBefore(row,target.nextSibling);else ed.insertBefore(row,target);
-         }
-       };
-       const end=()=>{
-         row.classList.remove('dragging');
-         document.removeEventListener('pointermove',move);
-         document.removeEventListener('pointerup',end);
-         document.removeEventListener('pointercancel',end);
-         save();render();
-       };
-       document.addEventListener('pointermove',move,{passive:false});
-       document.addEventListener('pointerup',end,{once:true});
-       document.addEventListener('pointercancel',end,{once:true});
-     });
+     row.innerHTML='<span class="drag-handle" role="button" tabindex="0" aria-label="Arrastrar para reordenar">⋮⋮</span><span class="name">'+h.name.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</span>';
+     const handle=row.querySelector('.drag-handle'); let dragging=false;
+     const moveTo=(y)=>{ const rows=[...ed.querySelectorAll('.habit-edit-row')]; let target=null; for(const r of rows){if(r!==row){const q=r.getBoundingClientRect();if(y>=q.top&&y<=q.bottom){target=r;break}}} if(!target)return; const from=rows.indexOf(row),to=rows.indexOf(target); if(from===to)return; const q=target.getBoundingClientRect(); if((from<to&&y>q.top+q.height/2)||(from>to&&y<q.top+q.height/2)){const item=S.habits.splice(from,1)[0];S.habits.splice(to,0,item);if(from<to)ed.insertBefore(row,target.nextSibling);else ed.insertBefore(row,target);}};
+     const onTM=e=>{if(!dragging)return;e.preventDefault();moveTo(e.touches[0].clientY)}; const onTE=()=>cleanup();
+     const onMM=e=>{if(!dragging)return;e.preventDefault();moveTo(e.clientY)}; const onME=()=>cleanup();
+     const cleanup=()=>{if(!dragging)return;dragging=false;row.classList.remove('dragging');document.removeEventListener('touchmove',onTM);document.removeEventListener('touchend',onTE);document.removeEventListener('touchcancel',onTE);document.removeEventListener('mousemove',onMM);document.removeEventListener('mouseup',onME);save();renderHabitManager()};
+     handle.addEventListener('touchstart',e=>{dragging=true;row.classList.add('dragging');e.preventDefault();document.addEventListener('touchmove',onTM,{passive:false});document.addEventListener('touchend',onTE,{passive:true});document.addEventListener('touchcancel',onTE,{passive:true});},{passive:false});
+     handle.addEventListener('mousedown',e=>{if(e.button!==0)return;dragging=true;row.classList.add('dragging');e.preventDefault();document.addEventListener('mousemove',onMM);document.addEventListener('mouseup',onME)});
+     handle.addEventListener('keydown',e=>{if(e.key==='ArrowUp'&&i>0){const x=S.habits.splice(i,1)[0];S.habits.splice(i-1,0,x);save();renderHabitManager()}else if(e.key==='ArrowDown'&&i<S.habits.length-1){const x=S.habits.splice(i,1)[0];S.habits.splice(i+1,0,x);save();renderHabitManager()}});
    }else{
-     row.innerHTML='<span class="name">'+h.name.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'<div class="v5days"></div></span>';
-     const week=row.querySelector('.v5days');
+     row.innerHTML='<span class="name">'+h.name.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'<div class="v5days"></div></span>'; const week=row.querySelector('.v5days');
      ['D','L','M','X','J','V','S'].forEach((d,di)=>{let x=document.createElement('button');x.textContent=d;if(h.days.includes(di))x.classList.add('on');x.onclick=()=>{if(h.days.includes(di)){if(h.days.length>1)h.days=h.days.filter(v=>v!==di)}else h.days.push(di);save();render()};week.appendChild(x)});
    }
    ed.appendChild(row);
  });
 }
-
 function renderReminders(){
  const box=document.getElementById('reminders');if(!box)return;box.innerHTML='';
  const todays=S.reminders.filter(r=>r.days.includes(dayOf(selected)));
@@ -242,17 +215,9 @@ document.getElementById('new').addEventListener('keydown',e=>{if(e.key==='Enter'
 
 
 /* V5 controls */
-document.getElementById('habitManageToggle').onclick=()=>{
- const m=document.getElementById('habitManageMenu'),o=m.classList.toggle('open');
- document.getElementById('habitManageToggle').textContent=o?'×':'＋';
-};
-function v5HabitPanel(mode){
- window.habitManagerMode=mode;
- ['habitAddSub','habitEditSub','habitOrderSub','habitScheduleSub'].forEach(id=>document.getElementById(id).classList.remove('open'));
- const id=mode==='add'?'habitAddSub':mode==='edit'?'habitEditSub':mode==='order'?'habitOrderSub':'habitScheduleSub';
- document.getElementById(id).classList.add('open');
- if(mode!=='add')renderHabitManager();
-}
+function closeHabitManager(){const m=document.getElementById('habitManageMenu');m.classList.remove('open');document.getElementById('habitManageToggle').textContent='＋';['habitAddSub','habitEditSub','habitOrderSub','habitScheduleSub'].forEach(id=>{const el=document.getElementById(id);el.classList.remove('open');el.style.display='';});}
+document.getElementById('habitManageToggle').onclick=()=>{const m=document.getElementById('habitManageMenu');if(m.classList.contains('open'))closeHabitManager();else{m.classList.add('open');document.getElementById('habitManageToggle').textContent='×';}};
+function v5HabitPanel(mode){window.habitManagerMode=mode;document.getElementById('habitManageMenu').classList.remove('open');document.getElementById('habitManageToggle').textContent='＋';['habitAddSub','habitEditSub','habitOrderSub','habitScheduleSub'].forEach(id=>{const el=document.getElementById(id);el.classList.remove('open');el.style.display='';});const id=mode==='add'?'habitAddSub':mode==='edit'?'habitEditSub':mode==='order'?'habitOrderSub':'habitScheduleSub';document.getElementById(id).classList.add('open');if(mode!=='add')renderHabitManager();}
 document.getElementById('addHabitBtn').onclick=()=>{
  const b=document.getElementById('addHabitDays');
  if(!b.dataset.ready){b.innerHTML=['D','L','M','X','J','V','S'].map((d,i)=>'<button type="button" data-d="'+i+'" class="on">'+d+'</button>').join('');b.dataset.ready='1';b.onclick=e=>{let x=e.target.closest('button');if(x)x.classList.toggle('on')}}
@@ -268,18 +233,14 @@ document.getElementById('editHabitBtn').onclick=()=>v5HabitPanel('edit');
 document.getElementById('orderHabitBtn').onclick=()=>v5HabitPanel('order');
 document.getElementById('scheduleHabitBtn').onclick=()=>v5HabitPanel('schedule');
 
-document.getElementById('reminderManageToggle').onclick=()=>{
- const m=document.getElementById('reminderMenu'),o=m.classList.toggle('open');
- document.getElementById('reminderManageToggle').textContent=o?'×':'＋';
-};
-document.getElementById('addReminderV5').onclick=()=>{
+function closeReminderManager(){const m=document.getElementById('reminderMenu');m.classList.remove('open');document.getElementById('reminderManageToggle').textContent='＋';const sub=document.getElementById('reminderEditSub');sub.classList.remove('open');sub.style.display='';}
+document.getElementById('reminderManageToggle').onclick=()=>{const m=document.getElementById('reminderMenu');if(m.classList.contains('open'))closeReminderManager();else{m.classList.add('open');document.getElementById('reminderManageToggle').textContent='×';}};
+document.getElementById('addReminderV5').onclick=()=>{closeReminderManager();
  const v=prompt('Nombre del recordatorio:');if(!v||!v.trim())return;
  let t=prompt('Hora (HH:MM):','18:00')||'18:00';if(!/^\d{2}:\d{2}$/.test(t))t='18:00';
  S.reminders.push({id:'r'+Date.now(),name:v.trim(),days:[dayOf(selected)],time:t});save();render();
 };
-document.getElementById('editReminderV5').onclick=()=>{
- document.getElementById('reminderEditSub').classList.toggle('open');renderReminders();
-};
+document.getElementById('editReminderV5').onclick=()=>{const sub=document.getElementById('reminderEditSub');const was=sub.classList.contains('open');closeReminderManager();if(!was){sub.classList.add('open');renderReminders();}};
 document.getElementById('weekRemindersToggle').onclick=()=>{
  document.getElementById('weekReminders').classList.toggle('open');renderReminders();
 };
