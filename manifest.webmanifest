@@ -1,7 +1,7 @@
 {
-  "name": "Hábitos · Beta 1",
+  "name": "Hábitos · Beta 1.1",
   "short_name": "Hábitos",
-  "start_url": ".",
+  "start_url": "./?v=11",
   "display": "standalone",
   "background_color": "#080a0e",
   "theme_color": "#080a0e",

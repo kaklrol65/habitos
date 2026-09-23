@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0d11">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Hábitos · Beta 1</title>
+<title>Hábitos · Beta 1.1</title>
 <style>
 :root{--bg:#f4f5f7;--card:rgba(255,255,255,.78);--solid:#fff;--text:#17181b;--muted:#70737a;--line:rgba(30,35,45,.12);--blue:#1877ff;--blue2:#54a7ff;--green:#31c46c;--yellow:#ffd84d;--orange:#ff9f43;--purple:#9a7cff;--red:#ff6262;--shadow:0 12px 35px rgba(0,0,0,.08);--glass:blur(22px) saturate(150%)}
 .dark{--bg:#080a0e;--card:rgba(25,28,34,.74);--solid:#171a20;--text:#f4f5f7;--muted:#a2a6ae;--line:rgba(255,255,255,.10);--shadow:0 14px 40px rgba(0,0,0,.32)}
@@ -136,7 +136,15 @@ $('profileName').onchange=e=>{S.profile.name=e.target.value.trim();save();render
 function checkOnboarding(){if(!S.profile.name&&!localStorage.getItem('habitos-beta1-onboarded'))$('onboarding').classList.add('open');}let selectedProfile='student';document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>{selectedProfile=b.dataset.profile;document.querySelectorAll('[data-profile]').forEach(x=>x.classList.remove('active'));b.classList.add('active')});$('onboardContinue').onclick=()=>{S.profile.name=$('onboardName').value.trim()||'Tú';S.profile.student=selectedProfile==='student';S.profile.nico='moderate';S.profile.nicoEnabled=true;save();localStorage.setItem('habitos-beta1-onboarded','1');$('onboarding').classList.remove('open');render()};
 // gesto horizontal solo en zonas libres, no sobre botones/texto seleccionable
 autoSwipe();function autoSwipe(){let x=0,y=0;document.addEventListener('touchstart',e=>{const t=e.changedTouches[0];x=t.screenX;y=t.screenY},{passive:true});document.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.screenX-x,dy=t.screenY-y;if(Math.abs(dx)>90&&Math.abs(dx)>Math.abs(dy)*1.35&&!e.target.closest('button,input,textarea,select,.week-shell,.days,.pillrow')){if(dx<0&&screen<5)setScreen(screen+1);if(dx>0&&screen>1)setScreen(screen-1)}},{passive:true})}
-if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');checkOnboarding();render();
+if('serviceWorker'in navigator){
+  // V1.1: force the browser to pick up the new service worker and remove stale caches.
+  navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.update())).catch(()=>{});
+  if(window.caches){
+    caches.keys().then(keys=>Promise.all(keys.filter(k=>/^habitos-/i.test(k)&&k!=='habitos-beta1-v11').map(k=>caches.delete(k)))).catch(()=>{});
+  }
+  navigator.serviceWorker.register('sw.js?v=11',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
+}
+checkOnboarding();render();
 </script>
 </body>
 </html>
