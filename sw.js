@@ -1,4 +1,4 @@
-const CACHE='habitos-beta1-v13';
+const CACHE='habitos-beta1-v15';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon.svg','./nico.png','./assets/nico.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
