@@ -175,8 +175,20 @@ function esc(s){return String(s||'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&l
 function nicoContext(reason='general',force=false){
  if(!S.profile.nicoEnabled)return;
  S.nicoStats=S.nicoStats||{habit:0,task:0,exam:0,completion:0,shown:0};
- if(!force){if(reason==='habit'){S.nicoStats.habit++;if(S.nicoStats.habit%4!==0)return;}else if(reason==='task'){S.nicoStats.task++;if(S.nicoStats.task%4!==0)return;}else if(reason==='exam'){S.nicoStats.exam++;if(S.nicoStats.exam%3!==0)return;}else if(reason==='completion'){S.nicoStats.completion++;if(S.nicoStats.completion%3!==0)return;}else if(Math.random()>0.25)return;}
- S.nicoStats.shown++;save();const pick=a=>a[Math.floor(Math.random()*a.length)];const mode=S.profile.nico||'moderate';
+ const stats=S.nicoStats,nowMs=Date.now(),day=todayISO();
+ if(stats.autoDay!==day){stats.autoDay=day;stats.autoShown=0;}
+ // Las apariciones automaticas tienen pausas y un limite diario; abrir a Nico manualmente nunca se bloquea.
+ if(!force){
+  if($('nicoIsland')?.classList.contains('expanded'))return;
+  if((stats.autoShown||0)>=3)return;
+  if(stats.lastAutoAt&&nowMs-stats.lastAutoAt<50*60*1000)return;
+  const chances={habit:.13,task:.16,exam:.30,completion:.20,general:.16};
+  let chance=chances[reason]??.14;
+  if(stats.lastAutoReason===reason)chance*=.55;
+  if(Math.random()>chance)return;
+ }
+ if(!force){stats.autoShown=(stats.autoShown||0)+1;stats.lastAutoAt=nowMs;stats.lastAutoReason=reason;}
+ stats.shown=(stats.shown||0)+1;save();const pick=a=>a[Math.floor(Math.random()*a.length)];const mode=S.profile.nico||'moderate';
  const habits=active(selected),done=habits.filter(i=>S.done[doneKey(i,selected)]).length,total=habits.length,p=total?Math.round(done/total*100):0;
  const pending=S.tasks.filter(t=>!t.done).sort((a,b)=>({high:0,medium:1,low:2}[a.priority||'medium']-({high:0,medium:1,low:2}[b.priority||'medium']))||(a.due||'9999').localeCompare(b.due||'9999'));
  const overdue=pending.filter(t=>t.due&&t.due<todayISO()),dueToday=pending.filter(t=>t.due===todayISO());
