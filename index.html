@@ -180,9 +180,9 @@ function nicoContext(reason='general',force=false){
  // Las apariciones automaticas tienen pausas y un limite diario; abrir a Nico manualmente nunca se bloquea.
  if(!force){
   if($('nicoIsland')?.classList.contains('expanded'))return;
-  if((stats.autoShown||0)>=3)return;
-  if(stats.lastAutoAt&&nowMs-stats.lastAutoAt<50*60*1000)return;
-  const chances={habit:.13,task:.16,exam:.30,completion:.20,general:.16};
+  if((stats.autoShown||0)>=5)return;
+  if(stats.lastAutoAt&&nowMs-stats.lastAutoAt<(35+Math.random()*6)*60*1000)return;
+  const chances={habit:.13,task:.16,exam:.35,completion:.20,general:.16};
   let chance=chances[reason]??.14;
   if(stats.lastAutoReason===reason)chance*=.55;
   if(Math.random()>chance)return;
@@ -246,7 +246,7 @@ if('serviceWorker'in navigator){
   if(window.caches){
     caches.keys().then(keys=>Promise.all(keys.filter(k=>/^habitos-/i.test(k)&&k!=='habitos-beta1-v23').map(k=>caches.delete(k)))).catch(()=>{});
   }
-  navigator.serviceWorker.register('sw.js?v=20',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
+  navigator.serviceWorker.register('sw.js?v=24',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
 }
 cleanupCompletedTasks();checkOnboarding();initNicoDrag();render(false);renderRitual();if(!localStorage.getItem('habitos-beta1-nico-seen')){setTimeout(()=>{if(S.profile.nicoEnabled){nicoContext();localStorage.setItem('habitos-beta1-nico-seen','1')}},900)}
 </script>
