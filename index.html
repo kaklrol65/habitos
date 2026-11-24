@@ -47,7 +47,7 @@ button,.card,.pill,.mini,.primary,.ghost,.icon{transition:transform .16s ease,op
 @media(max-width:620px){.top h1{font-size:30px}.nav button{font-size:10px}.nav button span{font-size:18px}.week-grid{min-width:680px}.stats{grid-template-columns:1fr 1fr}.hero{padding:20px}.nico-island{right:12px}.focus-fab{right:12px}}
 .nico-island.island-only{cursor:grab}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
-.today-free{background:rgba(34,197,94,.13);color:#15803d}.today-busy{background:rgba(59,130,246,.13);color:#2563eb}.today-free b,.today-busy b{font-size:24px}.today-hours .muted{opacity:.8}</style>
+.today-free{background:transparent;color:#16a34a}.today-busy{background:transparent;color:#2563eb}.today-hours .stat{background:transparent;padding:4px 0;border-radius:0}.today-free span,.today-free b{color:#16a34a}.today-busy span,.today-busy b{color:#2563eb}.today-free b,.today-busy b{font-size:24px}.today-hours .muted{opacity:.8}</style>
 </head>
 <body>
 <main class="app">
@@ -249,7 +249,7 @@ function checkOnboarding(){if(!S.profile.name&&!localStorage.getItem('habitos-be
 autoSwipe();function autoSwipe(){let x=0,y=0;document.addEventListener('touchstart',e=>{const t=e.changedTouches[0];x=t.screenX;y=t.screenY},{passive:true});document.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.screenX-x,dy=t.screenY-y;if(Math.abs(dx)>90&&Math.abs(dx)>Math.abs(dy)*1.35&&!e.target.closest('button,input,textarea,select,.week-shell,.days,.pillrow')){if(dx<0&&screen<5)setScreen(screen+1);if(dx>0&&screen>1)setScreen(screen-1)}},{passive:true})}
 if('serviceWorker' in navigator){
   // V39: preserve exam records; worker cache versioned and update checks retained.
-  navigator.serviceWorker.register('sw.js?v=32',{updateViaCache:'none'}).then(reg=>{
+  navigator.serviceWorker.register('sw.js?v=33',{updateViaCache:'none'}).then(reg=>{
     reg.update().catch(()=>{});
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update().catch(()=>{});});
   }).catch(()=>{});
