@@ -47,7 +47,25 @@ button,.card,.pill,.mini,.primary,.ghost,.icon{transition:transform .16s ease,op
 @media(max-width:620px){.top h1{font-size:30px}.nav button{font-size:10px}.nav button span{font-size:18px}.week-grid{min-width:680px}.stats{grid-template-columns:1fr 1fr}.hero{padding:20px}.nico-island{right:12px}.focus-fab{right:12px}}
 .nico-island.island-only{cursor:grab}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
-.today-free{background:transparent;color:#16a34a}.today-busy{background:transparent;color:#2563eb}.today-hours .stat{background:transparent;padding:4px 0;border-radius:0}.today-free span,.today-free b{color:#16a34a}.today-busy span,.today-busy b{color:#2563eb}.today-free b,.today-busy b{font-size:24px}.today-hours .muted{opacity:.8}</style>
+.today-free{background:transparent;color:#16a34a}.today-busy{background:transparent;color:#2563eb}.today-hours .stat{background:transparent;padding:4px 0;border-radius:0}.today-free span,.today-free b{color:#16a34a}.today-busy span,.today-busy b{color:#2563eb}.today-free b,.today-busy b{font-size:24px}.today-hours .muted{opacity:.8}
+/* V45 · pulido visual */
+.nav button span{display:grid;place-items:center;font-size:0;line-height:1;margin-bottom:4px}
+.nav button span svg{width:22px;height:22px;display:block;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#progressRange{width:auto;min-width:88px;height:42px;padding:0 19px;border-radius:999px;background:var(--solid);font-size:14px;font-weight:750;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.mini.blue{background:transparent;border:1px solid var(--line);border-radius:13px;color:var(--blue);padding:8px 12px;font-size:13px;font-weight:750;box-shadow:none}
+.mini.blue:active{background:rgba(24,119,255,.08)}
+.priority-high,.priority-medium,.priority-low{display:inline-flex;align-items:center;border:0;border-radius:999px;padding:6px 11px;font-size:11px;font-weight:800;line-height:1.15}
+.priority-high{background:#ffe8e7;color:#c65350}
+.priority-medium{background:#fff0dc;color:#a96d28}
+.priority-low{background:#e2f6e9;color:#32865a}
+.dark .priority-high{background:rgba(220,91,86,.18);color:#ffaaa5}
+.dark .priority-medium{background:rgba(198,139,48,.18);color:#f2c17c}
+.dark .priority-low{background:rgba(57,159,102,.18);color:#91dfb0}
+.subjects-edit-toggle,.exams-edit-toggle{width:38px;height:38px;min-width:38px;border-radius:13px!important;padding:0!important;display:grid;place-items:center;font-size:17px!important;background:transparent}
+.study-filters{align-items:center}
+.study-filters:before{content:"";width:34px;height:34px;flex:0 0 34px;border:1px solid var(--line);border-radius:50%;background-color:var(--solid);background-repeat:no-repeat;background-position:center;background-size:17px 17px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23777' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h9m4 0h3M4 17h3m4 0h9'/%3E%3Ccircle cx='15' cy='7' r='2'/%3E%3Ccircle cx='9' cy='17' r='2'/%3E%3C/svg%3E")}
+@media(max-width:390px){.nav button{padding:8px 3px}.nav button span svg{width:21px;height:21px}.mini.blue{padding:7px 9px;font-size:12px}}
+</style>
 </head>
 <body>
 <main class="app">
@@ -95,7 +113,7 @@ button,.card,.pill,.mini,.primary,.ghost,.icon{transition:transform .16s ease,op
 <section class="screen" id="s7"><div class="top"><div><div class="eyebrow">🌙 Ritual nocturno</div><h1>Un momento para ti</h1><div class="sub">Baja el ritmo. No tienes que resolverlo todo esta noche.</div></div><button class="icon" id="ritualClose" aria-label="Cerrar ritual">×</button></div><div class="card ritual-card"><div class="ritual-intro" id="ritualIntro">El día termina. Quédate con lo bueno, aprende de lo difícil y deja espacio para mañana.</div><div class="sectionhead"><div><b>¿Qué agradeces hoy?</b><div class="muted" id="ritualStreakText">🔥 Racha de ritual: 0 días</div></div><span class="tag" id="ritualBest">Mejor: 0</span></div><div class="stack"><input class="input gratitude" aria-label="Primera cosa que agradezco" placeholder="1. Algo que agradezco"><input class="input gratitude" aria-label="Segunda cosa que agradezco" placeholder="2. Algo que agradezco"><input class="input gratitude" aria-label="Tercera cosa que agradezco" placeholder="3. Algo que agradezco"></div><div class="sectionhead" style="margin-top:20px"><b>¿Qué esperas de mañana?</b></div><textarea class="input" id="tomorrow" rows="3" placeholder="Algo que te gustaría vivir o conseguir mañana..."></textarea><div class="ritual-footnote" id="ritualClosingLine">Descansar también forma parte del progreso.</div><button class="primary" style="width:100%;margin-top:16px" id="saveRitual">Guardar reflexión</button></div></section>
 </main>
 
-<nav class="nav" id="nav"><button data-go="1" class="active"><span>⌂</span>Inicio</button><button data-go="2"><span>✓</span>Hábitos</button><button data-go="3" id="navStudy"><span>📚</span>Estudio</button><button data-go="4"><span>▦</span>Semana</button><button data-go="5"><span>◔</span>Progreso</button></nav>
+<nav class="nav" id="nav"><button data-go="1" class="active"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3l8.5 7.5"/><path d="M5.5 9.5V21h13V9.5M9.5 21v-7h5v7"/></svg></span>Inicio</button><button data-go="2"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 9.5 17 19 6.5"/></svg></span>Hábitos</button><button data-go="3" id="navStudy"><span>📚</span>Estudio</button><button data-go="4"><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M7.5 3v4M16.5 3v4M3.5 9.5h17"/></svg></span>Semana</button><button data-go="5"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 19.5V4.5M3.5 19.5h17"/><path d="m6.5 15 4-4 3 2 5-6"/></svg></span>Progreso</button></nav>
 
 <button class="focus-fab" id="focusFab" aria-label="Concentración">🧠</button>
 <div class="focus-panel" id="focusPanel"><div class="sectionhead"><b>Concentración</b><button class="mini" id="focusClose">×</button></div><div class="muted">Elige cuánto tiempo quieres dedicarle.</div><div class="focus-options"><button class="mini focusTime" data-min="25">25 min</button><button class="mini focusTime active" data-min="45">45 min</button><button class="mini focusTime" data-min="60">60 min</button></div><div class="timer" id="timer">45:00</div><div class="focus-status" id="focusStatus">Listo para empezar.</div><div class="timer-actions"><button class="primary" id="focusStart">Iniciar</button><button class="ghost" id="focusReset">Reiniciar</button></div><div class="toggle"><span>Permitir salir de la app</span><input type="checkbox" id="allowExit" checked></div><div class="muted">El bloqueo real de otras apps llegará en la versión nativa para iOS.</div></div>
